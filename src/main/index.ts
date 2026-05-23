@@ -1,9 +1,22 @@
 import 'dotenv/config'
 
-import { app, shell, BrowserWindow, ipcMain, Tray, Menu, nativeImage } from 'electron'
+import {
+  app,
+  shell,
+  BrowserWindow,
+  ipcMain,
+  Tray,
+  Menu,
+  nativeImage,
+  NativeImage
+} from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
+import iconCalm from '../../resources/icon-calm.png?asset'
+import iconNotice from '../../resources/icon-notice.png?asset'
+import iconAlert from '../../resources/icon-alert.png?asset'
+import iconUrgent from '../../resources/icon-urgent.png?asset'
 import {
   startActivityTracking,
   resetBreakCounter,
@@ -12,11 +25,39 @@ import {
 } from './activity'
 import { checkAndMaybeFireNudge, resetNudgeCooldown } from './breakPolicy'
 
+/**
+ * Thresholds for the L1 "whisper" color escalation. The tray icon shifts
+ * color as time-since-break grows, giving the user an ambient cue *before*
+ * any actual notification fires. Keep these in lockstep with the nudge
+ * threshold in breakPolicy.ts — color should escalate visibly BEFORE the
+ * audible nudge so people can break voluntarily.
+ *
+ * ⚠️ TEST VALUES — 1/2/3 min so all states are visible within ~3 minutes.
+ * Before launch, restore to 5/10/15 (and bump breakPolicy's NUDGE_THRESHOLD
+ * back to 10).
+ */
+type TrayLevel = 'calm' | 'notice' | 'alert' | 'urgent'
+
+function pickTrayLevel(min: number): TrayLevel {
+  if (min < 1) return 'calm'
+  if (min < 2) return 'notice'
+  if (min < 3) return 'alert'
+  return 'urgent'
+}
+
 // Module-scope references so the tray and window don't get garbage-collected.
 let tray: Tray | null = null
 let mainWindow: BrowserWindow | null = null
 let isQuitting = false
 let stopActivityTracking: (() => void) | null = null
+
+// Pre-resized 16x16 tray icons, indexed by level. Built once at startup so
+// every poll-tick refresh is just a pointer swap.
+let trayImages: Record<TrayLevel, NativeImage> | null = null
+
+// Remember the last level we painted so we only call setImage on actual
+// transitions — avoids needless Win32 syscalls every 5 seconds.
+let lastTrayLevel: TrayLevel | null = null
 
 // Latest activity state. Updated on every poll tick; read when building
 // the tray menu and tooltip.
@@ -149,18 +190,46 @@ function buildTrayMenu(): Menu {
 
 function refreshTray(): void {
   if (!tray) return
+
   tray.setContextMenu(buildTrayMenu())
   tray.setToolTip(
     isTrackingPaused
       ? 'Bonk — paused'
       : `Bonk — ${activity.minutesSinceLastBreak} min since last break`
   )
+
+  // L1 whisper: tint the tray icon based on time-since-break. While paused
+  // or away, force the calm color so the user doesn't see a stale "urgent"
+  // icon when the timer isn't actually running.
+  if (trayImages) {
+    const level: TrayLevel =
+      isTrackingPaused || activity.context === 'idle'
+        ? 'calm'
+        : pickTrayLevel(activity.minutesSinceLastBreak)
+
+    if (level !== lastTrayLevel) {
+      console.log(
+        `[tray] color change: ${lastTrayLevel ?? 'init'} → ${level} ` +
+          `(${activity.minutesSinceLastBreak} min)`
+      )
+      tray.setImage(trayImages[level])
+      lastTrayLevel = level
+    }
+  }
 }
 
 function createTray(): void {
-  // Use the bundled icon. Windows tray icons render best at 16x16.
-  const trayImage = nativeImage.createFromPath(icon).resize({ width: 16, height: 16 })
-  tray = new Tray(trayImage)
+  // Build all four tinted variants up front. 16x16 is what Windows tray
+  // actually renders at; rescaling on every tick would burn CPU for no gain.
+  trayImages = {
+    calm: nativeImage.createFromPath(iconCalm).resize({ width: 16, height: 16 }),
+    notice: nativeImage.createFromPath(iconNotice).resize({ width: 16, height: 16 }),
+    alert: nativeImage.createFromPath(iconAlert).resize({ width: 16, height: 16 }),
+    urgent: nativeImage.createFromPath(iconUrgent).resize({ width: 16, height: 16 })
+  }
+
+  tray = new Tray(trayImages.calm)
+  lastTrayLevel = 'calm'
 
   tray.setToolTip('Bonk — starting...')
   tray.setContextMenu(buildTrayMenu())

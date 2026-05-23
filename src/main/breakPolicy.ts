@@ -9,13 +9,12 @@ import icon from '../../resources/icon.png?asset'
  * learns from skip reasons. Keep it dumb-and-clear for now.
  */
 
-// Lowered for development so we don't have to sit and wait 30 minutes to
-// see a notification. Bump to 30 before the public launch.
-const NUDGE_THRESHOLD_MIN = 1
+// ⚠️ TEST VALUES — 2 min threshold + 2 min cooldown so verification cycles
+// run in minutes, not half-hours. Before launch restore to 10 / 10 (and the
+// tray color thresholds in main/index.ts to 5/10/15).
+const NUDGE_THRESHOLD_MIN = 2
 
-// After a nudge fires, don't fire again for this long even if the user
-// ignores it. Prevents the app from becoming the very thing we hate.
-const COOLDOWN_AFTER_NUDGE_MIN = 1
+const COOLDOWN_AFTER_NUDGE_MIN = 2
 
 let lastNudgeAt: number | null = null
 
