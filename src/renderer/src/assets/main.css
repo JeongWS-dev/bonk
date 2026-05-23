@@ -1,171 +1,161 @@
 @import './base.css';
 
-body {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-  background-image: url('./wavy-lines.svg');
-  background-size: cover;
-  user-select: none;
+:root {
+  --bonk-bg: #fff8e7;
+  --bonk-surface: #ffffff;
+  --bonk-text: #3d2817;
+  --bonk-text-soft: #6b5847;
+  --bonk-text-faint: #9c8a7a;
+  --bonk-accent: #c77f5a;
+  --bonk-accent-soft: rgba(199, 127, 90, 0.18);
+  --bonk-border: rgba(199, 127, 90, 0.22);
 }
 
-code {
-  font-weight: 600;
-  padding: 3px 5px;
-  border-radius: 2px;
-  background-color: var(--color-background-mute);
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bonk-bg: #2a2218;
+    --bonk-surface: #382c1f;
+    --bonk-text: #fff8e7;
+    --bonk-text-soft: #c9b6a1;
+    --bonk-text-faint: #8a7a68;
+    --bonk-accent: #e69677;
+    --bonk-accent-soft: rgba(230, 150, 119, 0.18);
+    --bonk-border: rgba(230, 150, 119, 0.22);
+  }
+}
+
+body {
+  display: block;
+  overflow: auto;
+  background: var(--bonk-bg);
+  color: var(--bonk-text);
+  user-select: none;
   font-family:
-    ui-monospace,
-    SFMono-Regular,
-    SF Mono,
-    Menlo,
-    Consolas,
-    Liberation Mono,
-    monospace;
-  font-size: 85%;
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', Inter, Roboto, sans-serif;
 }
 
 #root {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-direction: column;
-  margin-bottom: 80px;
-}
-
-.logo {
-  margin-bottom: 20px;
-  -webkit-user-drag: none;
-  height: 128px;
-  width: 128px;
-  will-change: filter;
-  transition: filter 300ms;
-}
-
-.logo:hover {
-  filter: drop-shadow(0 0 1.2em #6988e6aa);
-}
-
-.creator {
-  font-size: 14px;
-  line-height: 16px;
-  color: var(--ev-c-text-2);
-  font-weight: 600;
-  margin-bottom: 10px;
-}
-
-.text {
-  font-size: 28px;
-  color: var(--ev-c-text-1);
-  font-weight: 700;
-  line-height: 32px;
-  text-align: center;
-  margin: 0 10px;
-  padding: 16px 0;
-}
-
-.tip {
-  font-size: 16px;
-  line-height: 24px;
-  color: var(--ev-c-text-2);
-  font-weight: 600;
-}
-
-.react {
-  background: -webkit-linear-gradient(315deg, #087ea4 55%, #7c93ee);
-  background-clip: text;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  font-weight: 700;
-}
-
-.ts {
-  background: -webkit-linear-gradient(315deg, #3178c6 45%, #f0dc4e);
-  background-clip: text;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  font-weight: 700;
-}
-
-.actions {
-  display: flex;
-  padding-top: 32px;
-  margin: -6px;
-  flex-wrap: wrap;
-  justify-content: flex-start;
-}
-
-.action {
-  flex-shrink: 0;
-  padding: 6px;
-}
-
-.action a {
-  cursor: pointer;
-  text-decoration: none;
-  display: inline-block;
-  border: 1px solid transparent;
-  text-align: center;
-  font-weight: 600;
-  white-space: nowrap;
-  border-radius: 20px;
-  padding: 0 20px;
-  line-height: 38px;
-  font-size: 14px;
-  border-color: var(--ev-button-alt-border);
-  color: var(--ev-button-alt-text);
-  background-color: var(--ev-button-alt-bg);
-}
-
-.action a:hover {
-  border-color: var(--ev-button-alt-hover-border);
-  color: var(--ev-button-alt-hover-text);
-  background-color: var(--ev-button-alt-hover-bg);
-}
-
-.versions {
-  position: absolute;
-  bottom: 30px;
-  margin: 0 auto;
-  padding: 15px 0;
-  font-family: 'Menlo', 'Lucida Console', monospace;
-  display: inline-flex;
-  overflow: hidden;
-  align-items: center;
-  border-radius: 22px;
-  background-color: #202127;
-  backdrop-filter: blur(24px);
-}
-
-.versions li {
   display: block;
-  float: left;
-  border-right: 1px solid var(--ev-c-gray-1);
-  padding: 0 20px;
+  max-width: 560px;
+  margin: 0 auto;
+  padding: 56px 32px 48px;
+}
+
+.bonk-header {
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.bonk-logo-wrap {
+  display: inline-block;
+  margin-bottom: 20px;
+}
+
+.bonk-logo-wrap svg {
+  display: block;
+  border-radius: 22px;
+}
+
+.bonk-header h1 {
+  font-size: 36px;
+  font-weight: 800;
+  margin: 0 0 6px;
+  color: var(--bonk-accent);
+  letter-spacing: -0.02em;
+}
+
+.tagline {
+  font-size: 15px;
+  margin: 0;
+  color: var(--bonk-text-soft);
+}
+
+.bonk-card {
+  background: var(--bonk-surface);
+  border: 1px solid var(--bonk-border);
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 20px;
+}
+
+.bonk-card h2 {
   font-size: 14px;
-  line-height: 14px;
-  opacity: 0.8;
-  &:last-child {
-    border: none;
-  }
+  font-weight: 600;
+  margin: 0 0 18px;
+  color: var(--bonk-text);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
 }
 
-@media (max-width: 720px) {
-  .text {
-    font-size: 20px;
-  }
+.stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 18px;
+  margin-bottom: 16px;
 }
 
-@media (max-width: 620px) {
-  .versions {
-    display: none;
-  }
+.stat {
+  text-align: center;
 }
 
-@media (max-width: 350px) {
-  .tip,
-  .actions {
-    display: none;
-  }
+.stat-value {
+  font-size: 30px;
+  font-weight: 700;
+  color: var(--bonk-accent);
+  line-height: 1;
+}
+
+.stat-label {
+  font-size: 12px;
+  color: var(--bonk-text-soft);
+  margin-top: 6px;
+}
+
+.hint {
+  font-size: 13px;
+  color: var(--bonk-text-faint);
+  margin: 0;
+  text-align: center;
+  line-height: 1.5;
+}
+
+.how-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.how-list li {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  font-size: 14px;
+  color: var(--bonk-text);
+  line-height: 1.5;
+  padding: 8px 0;
+}
+
+.dot {
+  flex-shrink: 0;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--bonk-accent);
+  margin-top: 8px;
+}
+
+.bonk-footer {
+  text-align: center;
+  font-size: 12px;
+  color: var(--bonk-text-faint);
+  margin-top: 32px;
+}
+
+.bonk-footer a {
+  color: var(--bonk-accent);
+  text-decoration: none;
+}
+
+.bonk-footer a:hover {
+  text-decoration: underline;
 }

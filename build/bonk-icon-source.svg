@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1024" height="1024" rx="218" fill="#C77F5A"/>
+  <text x="512" y="737"
+        font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif"
+        font-size="628"
+        font-weight="800"
+        fill="#FFF8E7"
+        text-anchor="middle">B</text>
+  <circle cx="771" cy="314" r="41" fill="#FFF8E7"/>
+</svg>

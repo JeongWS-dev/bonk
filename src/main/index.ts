@@ -37,11 +37,12 @@ app.on('before-quit', () => {
 
 function createWindow(): void {
   mainWindow = new BrowserWindow({
-    width: 900,
-    height: 670,
+    width: 720,
+    height: 720,
+    title: 'Bonk',
     show: false, // Bonk is a tray-first app — no window on startup.
     autoHideMenuBar: true,
-    ...(process.platform === 'linux' ? { icon } : {}),
+    icon, // explicit icon for all platforms (in dev Windows still uses electron.exe's icon, but at least Mac/Linux are right)
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
       sandbox: false

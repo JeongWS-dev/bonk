@@ -1,6 +1,7 @@
 import { Notification } from 'electron'
 import type { ActivityState } from './activity'
 import { generateBreakMessage } from './aiCoach'
+import icon from '../../resources/icon.png?asset'
 
 /**
  * V0 break policy: a single "nudge" threshold + cooldown. Eventually this
@@ -66,6 +67,7 @@ export async function checkAndMaybeFireNudge(
     const notification = new Notification({
       title: 'Bonk',
       body: message,
+      icon, // show the Bonk B icon in the toast on platforms that support it
       silent: true // UX rule: never make a sound by default
     })
 
