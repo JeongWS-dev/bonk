@@ -1,0 +1,247 @@
+:root {
+  --bonk-bg: rgba(255, 248, 231, 0.98);
+  --bonk-surface: #ffffff;
+  --bonk-text: #3d2817;
+  --bonk-text-soft: #6b5847;
+  --bonk-text-faint: #9c8a7a;
+  --bonk-accent: #c77f5a;
+  --bonk-accent-hover: #b56e4a;
+  --bonk-border: rgba(199, 127, 90, 0.22);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bonk-bg: rgba(45, 34, 23, 0.98);
+    --bonk-surface: #382c1f;
+    --bonk-text: #fff8e7;
+    --bonk-text-soft: #c9b6a1;
+    --bonk-text-faint: #8a7a68;
+    --bonk-accent: #e69677;
+    --bonk-accent-hover: #f0a98a;
+    --bonk-border: rgba(230, 150, 119, 0.25);
+  }
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body {
+  width: 100%;
+  height: 100%;
+  background: transparent;
+  overflow: hidden;
+  user-select: none;
+  font-family:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', Inter, Roboto, sans-serif;
+  color: var(--bonk-text);
+}
+
+#overlay-root {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  padding: 12px;
+}
+
+.overlay-card {
+  width: 100%;
+  max-width: 360px;
+  background: var(--bonk-bg);
+  border: 1px solid var(--bonk-border);
+  border-radius: 14px;
+  padding: 16px;
+  box-shadow:
+    0 12px 32px rgba(45, 34, 23, 0.18),
+    0 2px 6px rgba(45, 34, 23, 0.08);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  transform: translateX(110%);
+  opacity: 0;
+  transition:
+    transform 220ms cubic-bezier(0.2, 0.9, 0.3, 1),
+    opacity 220ms ease;
+}
+
+.overlay-card.is-visible {
+  transform: translateX(0);
+  opacity: 1;
+}
+
+.overlay-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.overlay-header svg {
+  border-radius: 6px;
+  flex-shrink: 0;
+}
+
+.overlay-title {
+  flex: 1;
+  min-width: 0;
+}
+
+.overlay-app-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--bonk-text);
+  line-height: 1.2;
+}
+
+.overlay-meta {
+  font-size: 11px;
+  color: var(--bonk-text-faint);
+  margin-top: 2px;
+}
+
+.overlay-x {
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  border: none;
+  background: transparent;
+  color: var(--bonk-text-faint);
+  font-size: 14px;
+  cursor: pointer;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 120ms;
+}
+
+.overlay-x:hover {
+  background: rgba(199, 127, 90, 0.12);
+  color: var(--bonk-text);
+}
+
+.overlay-message {
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--bonk-text);
+  margin-bottom: 14px;
+}
+
+.overlay-exercise {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--bonk-surface);
+  border: 1px solid var(--bonk-border);
+  border-radius: 10px;
+  padding: 12px;
+  margin-bottom: 14px;
+}
+
+.overlay-exercise-dot {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--bonk-accent);
+  flex-shrink: 0;
+}
+
+.overlay-exercise-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--bonk-text);
+  line-height: 1.2;
+}
+
+.overlay-exercise-sub {
+  font-size: 11px;
+  color: var(--bonk-text-faint);
+  margin-top: 2px;
+}
+
+.overlay-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.btn {
+  flex: 1;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 9px 8px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition:
+    background 120ms,
+    color 120ms;
+  border: 1px solid transparent;
+  white-space: nowrap;
+}
+
+.btn-primary {
+  background: var(--bonk-accent);
+  color: #fff8e7;
+}
+
+.btn-primary:hover {
+  background: var(--bonk-accent-hover);
+}
+
+.btn-secondary {
+  background: rgba(199, 127, 90, 0.12);
+  color: var(--bonk-text);
+}
+
+.btn-secondary:hover {
+  background: rgba(199, 127, 90, 0.22);
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--bonk-text-soft);
+}
+
+.btn-ghost:hover {
+  background: rgba(199, 127, 90, 0.08);
+  color: var(--bonk-text);
+}
+
+.overlay-skip {
+  padding-top: 4px;
+}
+
+.overlay-skip-q {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--bonk-text);
+  margin-bottom: 10px;
+}
+
+.overlay-skip-options {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.btn-skip-option {
+  font-family: inherit;
+  text-align: left;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 9px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--bonk-border);
+  background: var(--bonk-surface);
+  color: var(--bonk-text);
+  cursor: pointer;
+  transition: background 120ms;
+}
+
+.btn-skip-option:hover {
+  background: rgba(199, 127, 90, 0.1);
+}

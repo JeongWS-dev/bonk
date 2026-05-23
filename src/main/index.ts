@@ -23,7 +23,12 @@ import {
   type ActivityContext,
   type ActivityState
 } from './activity'
-import { checkAndMaybeFireNudge, resetNudgeCooldown } from './breakPolicy'
+import {
+  checkAndMaybeFireNudge,
+  resetNudgeCooldown,
+  extendCooldown
+} from './breakPolicy'
+import { initOverlay, hideOverlay, destroyOverlay } from './overlayWindow'
 
 /**
  * Thresholds for the L1 "whisper" color escalation. The tray icon shifts
@@ -255,6 +260,38 @@ app.whenReady().then(() => {
   createWindow()
   createTray()
 
+  // Wire the overlay's user actions back to the break policy. Done once at
+  // startup; the policy module just calls showOverlay() with the message and
+  // we route the resulting click here.
+  initOverlay({
+    onAction: (action) => {
+      switch (action.type) {
+        case 'take':
+          console.log('[overlay] Take')
+          resetBreakCounter()
+          resetNudgeCooldown()
+          activity = { ...activity, minutesSinceLastBreak: 0 }
+          refreshTray()
+          break
+        case 'snooze':
+          console.log('[overlay] Snooze 5')
+          extendCooldown(5)
+          break
+        case 'skip':
+          console.log(`[overlay] Skip (reason: ${action.reason ?? 'none'})`)
+          // 30-min quiet when the user says "I'm in flow", normal cooldown
+          // otherwise. The reason is the data fuel for V1 personalization.
+          if (action.reason === 'in-flow') {
+            extendCooldown(30)
+          }
+          break
+        case 'dismiss':
+          console.log('[overlay] Dismissed')
+          break
+      }
+    }
+  })
+
   // Start the activity polling loop. Every tick refreshes the tray and
   // gives the break policy a chance to fire a nudge (async — the AI call
   // happens in the background, never blocking the next poll).
@@ -269,6 +306,10 @@ app.whenReady().then(() => {
         resetNudgeCooldown()
         activity = { ...activity, minutesSinceLastBreak: 0 }
         refreshTray()
+      },
+      onSnooze: () => extendCooldown(5),
+      onSkip: () => {
+        // Skip reason routing now lives in the overlay action handler above.
       }
     })
   })
@@ -280,6 +321,8 @@ app.whenReady().then(() => {
 
 app.on('before-quit', () => {
   stopActivityTracking?.()
+  hideOverlay()
+  destroyOverlay()
 })
 
 // Bonk lives in the tray, so don't quit when the (hidden) window is closed.

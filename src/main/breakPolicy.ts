@@ -1,7 +1,6 @@
-import { Notification } from 'electron'
 import type { ActivityState } from './activity'
 import { generateBreakMessage } from './aiCoach'
-import icon from '../../resources/icon.png?asset'
+import { showOverlay } from './overlayWindow'
 
 /**
  * V0 break policy: a single "nudge" threshold + cooldown. Eventually this
@@ -23,8 +22,12 @@ let lastNudgeAt: number | null = null
 let nudgeInFlight = false
 
 export interface BreakPolicyCallbacks {
-  /** Fired when the user clicks the notification (interpreted as "Take"). */
+  /** Fired when the user clicks Take in the overlay. */
   onTakeBreak: () => void
+  /** Fired when the user snoozes — counter keeps running, cooldown extends. */
+  onSnooze: () => void
+  /** Fired when the user skips, with the captured reason for V1 learning. */
+  onSkip: (reason: string) => void
 }
 
 /**
@@ -63,25 +66,24 @@ export async function checkAndMaybeFireNudge(
 
     const message = await generateBreakMessage(state)
 
-    const notification = new Notification({
-      title: 'Bonk',
-      body: message,
-      icon, // show the Bonk B icon in the toast on platforms that support it
-      silent: true // UX rule: never make a sound by default
+    await showOverlay({
+      message,
+      minutesSinceLastBreak: state.minutesSinceLastBreak,
+      contextAppName: state.activeAppName
     })
 
-    notification.on('click', () => {
-      console.log('[break] User clicked notification — counting as Take')
-      callbacks.onTakeBreak()
-    })
-
-    notification.show()
     console.log(
-      `[break] Nudge fired at ${state.minutesSinceLastBreak} min (${state.context})`
+      `[break] Overlay shown at ${state.minutesSinceLastBreak} min (${state.context})`
     )
   } finally {
     nudgeInFlight = false
   }
+
+  // Wire the overlay action handler back to the policy callbacks. Note this
+  // is set every nudge — it's idempotent (initOverlay just stores the latest
+  // callbacks reference) so harmless.
+  // The actual wiring happens in main/index.ts at startup via initOverlay.
+  void callbacks
 }
 
 /**
@@ -91,4 +93,15 @@ export async function checkAndMaybeFireNudge(
  */
 export function resetNudgeCooldown(): void {
   lastNudgeAt = null
+}
+
+/**
+ * Push the cooldown forward by `minutes` from now. Used when the user snoozes —
+ * we don't want to re-fire immediately, even if the regular cooldown elapsed.
+ */
+export function extendCooldown(minutes: number): void {
+  // Set lastNudgeAt into the future so the cooldown check stays "active"
+  // for the requested duration regardless of the default cooldown length.
+  const futureBase = Date.now() + minutes * 60_000 - COOLDOWN_AFTER_NUDGE_MIN * 60_000
+  lastNudgeAt = futureBase
 }
