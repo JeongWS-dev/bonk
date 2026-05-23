@@ -1,3 +1,5 @@
+import 'dotenv/config'
+
 import { app, shell, BrowserWindow, ipcMain, Tray, Menu, nativeImage } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
@@ -184,13 +186,14 @@ app.whenReady().then(() => {
   createTray()
 
   // Start the activity polling loop. Every tick refreshes the tray and
-  // gives the break policy a chance to fire a nudge.
+  // gives the break policy a chance to fire a nudge (async — the AI call
+  // happens in the background, never blocking the next poll).
   stopActivityTracking = startActivityTracking((state) => {
     if (isTrackingPaused) return
     activity = state
     refreshTray()
 
-    checkAndMaybeFireNudge(state, {
+    void checkAndMaybeFireNudge(state, {
       onTakeBreak: () => {
         resetBreakCounter()
         resetNudgeCooldown()

@@ -1,5 +1,6 @@
 import { Notification } from 'electron'
 import type { ActivityState } from './activity'
+import { generateBreakMessage } from './aiCoach'
 
 /**
  * V0 break policy: a single "nudge" threshold + cooldown. Eventually this
@@ -15,22 +16,11 @@ const NUDGE_THRESHOLD_MIN = 1
 // ignores it. Prevents the app from becoming the very thing we hate.
 const COOLDOWN_AFTER_NUDGE_MIN = 1
 
-// Will be replaced by Claude Haiku-generated messages in Day 8+. For now,
-// pick from a small pool to avoid the "same message every time" problem.
-const NUDGE_MESSAGES = [
-  "You've been at it {min} min straight. Quick 2-min break?",
-  '{min} min of focus. Your shoulders are asking for a stretch.',
-  'Hey — {min} min in. How about a 30-second walk?',
-  "{min} min straight. Eyes deserve a sec on something far away.",
-  'You and the keyboard had a {min}-min date. Stretch break?'
-]
-
 let lastNudgeAt: number | null = null
 
-function pickMessage(min: number): string {
-  const template = NUDGE_MESSAGES[Math.floor(Math.random() * NUDGE_MESSAGES.length)]
-  return template.replace('{min}', String(min))
-}
+// Re-entrancy guard: never start a second AI generation while one is still
+// in flight. The polling loop runs every 5s and the API call may take longer.
+let nudgeInFlight = false
 
 export interface BreakPolicyCallbacks {
   /** Fired when the user clicks the notification (interpreted as "Take"). */
@@ -39,12 +29,12 @@ export interface BreakPolicyCallbacks {
 
 /**
  * Inspect the current activity state and fire a nudge if the policy allows.
- * Safe to call on every poll tick — it's idempotent.
+ * Safe to call on every poll tick — it's idempotent and self-throttling.
  */
-export function checkAndMaybeFireNudge(
+export async function checkAndMaybeFireNudge(
   state: ActivityState,
   callbacks: BreakPolicyCallbacks
-): void {
+): Promise<void> {
   // Never bonk during meetings or while the user is away from the desk.
   if (state.context === 'idle' || state.context === 'meeting') {
     return
@@ -63,24 +53,34 @@ export function checkAndMaybeFireNudge(
     return
   }
 
-  // Fire.
-  lastNudgeAt = Date.now()
+  if (nudgeInFlight) return
+  nudgeInFlight = true
 
-  const notification = new Notification({
-    title: 'Bonk',
-    body: pickMessage(state.minutesSinceLastBreak),
-    silent: true // UX rule: never make a sound by default
-  })
+  try {
+    // Lock the cooldown timestamp BEFORE awaiting the API call. Otherwise
+    // a slow generation could let the next poll tick start a second one.
+    lastNudgeAt = Date.now()
 
-  notification.on('click', () => {
-    console.log('[break] User clicked notification — counting as Take')
-    callbacks.onTakeBreak()
-  })
+    const message = await generateBreakMessage(state)
 
-  notification.show()
-  console.log(
-    `[break] Nudge fired at ${state.minutesSinceLastBreak} min (${state.context})`
-  )
+    const notification = new Notification({
+      title: 'Bonk',
+      body: message,
+      silent: true // UX rule: never make a sound by default
+    })
+
+    notification.on('click', () => {
+      console.log('[break] User clicked notification — counting as Take')
+      callbacks.onTakeBreak()
+    })
+
+    notification.show()
+    console.log(
+      `[break] Nudge fired at ${state.minutesSinceLastBreak} min (${state.context})`
+    )
+  } finally {
+    nudgeInFlight = false
+  }
 }
 
 /**
