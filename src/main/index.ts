@@ -8,6 +8,7 @@ import {
   type ActivityContext,
   type ActivityState
 } from './activity'
+import { checkAndMaybeFireNudge, resetNudgeCooldown } from './breakPolicy'
 
 // Module-scope references so the tray and window don't get garbage-collected.
 let tray: Tray | null = null
@@ -111,6 +112,7 @@ function buildTrayMenu(): Menu {
         // Resets the counter for now. Day 11+ this will also open the
         // break-overlay window with the AI coach message + exercise GIF.
         resetBreakCounter()
+        resetNudgeCooldown()
         activity = { ...activity, minutesSinceLastBreak: 0 }
         refreshTray()
         console.log('[tray] Break counter reset')
@@ -181,11 +183,21 @@ app.whenReady().then(() => {
   createWindow()
   createTray()
 
-  // Start the activity polling loop. Every tick refreshes the tray.
+  // Start the activity polling loop. Every tick refreshes the tray and
+  // gives the break policy a chance to fire a nudge.
   stopActivityTracking = startActivityTracking((state) => {
     if (isTrackingPaused) return
     activity = state
     refreshTray()
+
+    checkAndMaybeFireNudge(state, {
+      onTakeBreak: () => {
+        resetBreakCounter()
+        resetNudgeCooldown()
+        activity = { ...activity, minutesSinceLastBreak: 0 }
+        refreshTray()
+      }
+    })
   })
 
   app.on('activate', function () {
